@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReceiptGPT — AI-Powered Invoicing Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ===== CSS Variables ===== */
+    :root {
+      --bg-primary: #0b0d14;
+      --bg-secondary: #11141f;
+      --bg-card: #1a1f2e;
+      --bg-card-hover: #222839;
+      --border: #2a3045;
+      --border-active: #4a5580;
+      --text-primary: #f0f2f8;
+      --text-secondary: #8b95b5;
+      --text-muted: #5a6480;
+      --accent: #0070e0;
+      --accent-light: #4a9eff;
+      --accent-dark: #0050a0;
+      --success: #00c853;
+      --warning: #ffd600;
+      --danger: #ff5252;
+      --paypal-blue: #169bd7;
+      --paypal-yellow: #ffc439;
+      --gradient: linear-gradient(135deg, #0070e0, #4a9eff);
+      --gradient-warm: linear-gradient(135deg, #ff6b35, #f7c948);
+      --gradient-success: linear-gradient(135deg, #00c853, #69f0ae);
+      --shadow: 0 8px 32px rgba(0,0,0,0.3);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-lg: 20px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ===== Background animation ===== */
+    .bg-glow {
+      position: fixed;
+      top: -40%;
+      left: -20%;
+      width: 80%;
+      height: 80%;
+      background: radial-gradient(circle at 30% 50%, rgba(0,112,224,0.08), transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+      animation: float 20s ease-in-out infinite;
+    }
+    .bg-glow-2 {
+      top: 50%;
+      right: -20%;
+      left: auto;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(circle at 70% 50%, rgba(79,172,254,0.06), transparent 60%);
+      animation: float 25s ease-in-out infinite reverse;
+    }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(20px, -30px) rotate(1deg); }
+      66% { transform: translate(-10px, 20px) rotate(-1deg); }
+    }
+
+    /* ===== Layout ===== */
+    .app-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 32px 60px;
+    }
+
+    /* ===== Header ===== */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--gradient);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: white;
+      box-shadow: 0 4px 15px rgba(0,112,224,0.3);
+    }
+    .logo-text h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .logo-text span {
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .header-badge {
+      background: rgba(0,112,224,0.15);
+      border: 1px solid rgba(0,112,224,0.25);
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-badge .dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ===== Hero ===== */
+    .hero {
+      text-align: center;
+      padding: 40px 20px 50px;
+      margin-bottom: 40px;
+    }
+    .hero h2 {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.15;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #f0f2f8 30%, #4a9eff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 640px;
+      margin: 0 auto 28px;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ===== Buttons ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--gradient);
+      color: white;
+      box-shadow: 0 4px 20px rgba(0,112,224,0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0,112,224,0.4);
+    }
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-active);
+    }
+    .btn-success {
+      background: var(--gradient-success);
+      color: #003d00;
+    }
+    .btn-paypal {
+      background: var(--paypal-yellow);
+      color: #003087;
+    }
+    .btn-paypal:hover {
+      filter: brightness(1.05);
+      transform: translateY(-2px);
+    }
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+    .btn-icon {
+      padding: 10px;
+      border-radius: 8px;
+      min-width: 40px;
+      justify-content: center;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* ===== Stats Bar ===== */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+    .stat-card .label {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .stat-card .sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* ===== Main Grid ===== */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-body {
+      padding: 24px;
+    }
+
+    /* ===== Input ===== */
+    .input-group {
+      margin-bottom: 16px;
+    }
+    .input-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .input-group textarea,
+    .input-group input {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      outline: none;
+      resize: vertical;
+    }
+    .input-group textarea:focus,
+    .input-group input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,112,224,0.15);
+    }
+    .input-group textarea::placeholder,
+    .input-group input::placeholder {
+      color: var(--text-muted);
+    }
+    .input-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ===== Chat Message ===== */
+    .chat-area {
+      max-height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 4px 0;
+    }
+    .chat-area::-webkit-scrollbar {
+      width: 6px;
+    }
+    .chat-area::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .chat-area::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+    .message {
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 90%;
+    }
+    .message.user {
+      background: rgba(0,112,224,0.12);
+      border: 1px solid rgba(0,112,224,0.2);
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .message.assistant {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .message.system {
+      background: rgba(0,200,83,0.08);
+      border: 1px solid rgba(0,200,83,0.15);
+      align-self: center;
+      text-align: center;
+      font-size: 13px;
+      color: var(--success);
+    }
+    .message .msg-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .message .msg-action {
+      margin-top: 8px;
+      display: inline-block;
+    }
+
+    /* ===== Invoice Preview ===== */
+    .invoice-preview {
+      background: white;
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      color: #1a1a2e;
+      font-size: 13px;
+    }
+    .invoice-preview .inv-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #eee;
+    }
+    .invoice-preview .inv-company {
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .invoice-preview .inv-number {
+      text-align: right;
+    }
+    .invoice-preview .inv-number h4 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .invoice-preview table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+    }
+    .invoice-preview th {
+      text-align: left;
+      padding: 8px 4px;
+      border-bottom: 1px solid #ddd;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #666;
+      font-weight: 600;
+    }
+    .invoice-preview td {
+      padding: 10px 4px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .invoice-preview .total-row {
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .invoice-preview .total-row td {
+      border-bottom: none;
+      padding-top: 16px;
+    }
+
+    /* ===== Toast ===== */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1000;
+    }
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 14px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      box-shadow: var(--shadow);
+      animation: slideIn 0.3s ease;
+      max-width: 400px;
+    }
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error { border-left: 4px solid var(--danger); }
+    .toast.info { border-left: 4px solid var(--accent); }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ===== Tabs ===== */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-secondary);
+      padding: 4px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 24px;
+    }
+    .tab {
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-muted);
+      border: none;
+      background: none;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .tab:hover:not(.active) {
+      color: var(--text-secondary);
+    }
+
+    /* ===== Suggestion chips ===== */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .chip {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-secondary);
+      font-family: inherit;
+    }
+    .chip:hover {
+      border-color: var(--accent);
+      color: var(--accent-light);
+      background: rgba(0,112,224,0.08);
+    }
+
+    /* ===== Loading ===== */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* ===== Empty state ===== */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .empty-state h4 {
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    /* ===== Footer ===== */
+    footer {
+      text-align: center;
+      padding: 32px 0;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    footer a {
+      color: var(--accent-light);
+      text-decoration: none;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .app-container { padding: 16px; }
+      .hero h2 { font-size: 32px; }
+      .stats-bar { grid-template-columns: 1fr; }
+    }
+
+    /* ===== Loading skeleton ===== */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 4px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="logo">
+        <div class="logo-icon">R</div>
+        <div class="logo-text">
+          <h1>ReceiptGPT</h1>
+          <span>AI-Powered Invoicing Agent</span>
+        </div>
+      </div>
+      <div class="header-badge">
+        <span class="dot"></span>
+        PayPal + AI Hackathon Entry
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <div class="hero">
+      <h2>AI Invoicing. Just Talk.</h2>
+      <p>Describe what you need to bill — ReceiptGPT turns natural language into PayPal invoices, manages payments, and gives you real-time business insights. No forms. No friction.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="loadSample()">✨ Try a demo</button>
+        <button class="btn btn-secondary" onclick="createDemoInvoice()">📄 Create sample invoice</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="label">Status</div>
+        <div class="value" style="color: var(--success);">● Online</div>
+        <div class="sub">PayPal Sandbox Connected</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">AI Agent</div>
+        <div class="value" id="statsInvoices">0</div>
+        <div class="sub">Invoices generated via AI</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Demo Invoices</div>
+        <div class="value" id="statsDEMO">0</div>
+        <div class="sub">Available for testing</div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+      <!-- Left: AI Chat -->
+      <div class="card">
+        <div class="card-header">
+          <h3>🤖 AI Invoice Agent</h3>
+          <span style="font-size:12px;color:var(--text-muted)">Natural Language → Invoice</span>
+        </div>
+        <div class="card-body">
+          <div class="chips" id="suggestionChips">
+            <button class="chip" onclick="useSuggestion('Create an invoice for John at john@email.com: Web Design $500, Hosting $25/month, SEO Audit $300')">🖥 Web Design Invoice</button>
+            <button class="chip" onclick="useSuggestion('Bill Acme Corp for 40 hours at $150/hr for consulting work, plus $250 for expenses')">⏱ Consulting Hours</button>
+            <button class="chip" onclick="useSuggestion('Generate invoice: Product Launch Package - Strategy $2,000, Design $1,500, Development $3,500')">🚀 Product Launch</button>
+          </div>
+
+          <div class="chat-area" id="chatArea">
+            <div class="message assistant">
+              <div class="msg-label">ReceiptGPT</div>
+              👋 Hi! I'm your AI invoicing agent. Tell me what you want to bill for, or click a suggestion above to get started.
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <textarea id="chatInput" rows="2" placeholder='Try: "Create an invoice for $500 for web design services to client@example.com"' style="flex:1;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;color:var(--text-primary);font-family:inherit;font-size:14px;resize:none;outline:none;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendInvoice();}"></textarea>
+            <button class="btn btn-primary btn-icon" onclick="sendInvoice()" id="sendBtn" style="height:auto;">➤</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Invoice Preview & Actions -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📋 Invoice Hub</h3>
+          <span style="font-size:12px;color:var(--text-muted)">Preview · Send · Pay</span>
+        </div>
+        <div class="card-body">
+          <div class="tabs">
+            <button class="tab active" data-tab="preview" onclick="switchTab('preview')">Preview</button>
+            <button class="tab" data-tab="actions" onclick="switchTab('actions')">Quick Actions</button>
+            <button class="tab" data-tab="all" onclick="switchTab('all')">All Invoices</button>
+          </div>
+
+          <!-- Preview Tab -->
+          <div id="tabPreview" class="tab-content">
+            <div id="invoicePreviewArea">
+              <div class="empty-state">
+                <div class="icon">📄</div>
+                <h4>No invoice yet</h4>
+                <p style="font-size:13px;">Describe what you want to bill for in the AI chat, and the preview will appear here.</p>
+              </div>
+            </div>
+            <div id="invoiceActions" style="display:none;margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;">
+              <button class="btn btn-success btn-sm" onclick="sendCurrentInvoice()">📤 Send Invoice</button>
+              <button class="btn btn-paypal btn-sm" onclick="generatePaymentLink()">🔗 Payment Link</button>
+              <button class="btn btn-secondary btn-sm" onclick="createDemoInvoice()">🔄 New Demo</button>
+            </div>
+          </div>
+
+          <!-- Actions Tab -->
+          <div id="tabActions" class="tab-content" style="display:none;">
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <button class="btn btn-primary" onclick="createDemoInvoice()" style="width:100%;justify-content:center;">📄 Create Demo Invoice</button>
+              <button class="btn btn-secondary" onclick="fetchInvoices()" style="width:100%;justify-content:center;">📋 List Invoices</button>
+              <button class="btn btn-secondary" onclick="generateAndCopyLink()" style="width:100%;justify-content:center;">🔗 Generate Payment Link</button>
+              <button class="btn btn-secondary" onclick="fetchTransactions()" style="width:100%;justify-content:center;">📊 Recent Transactions</button>
+            </div>
+          </div>
+
+          <!-- All Invoices Tab -->
+          <div id="tabAll" class="tab-content" style="display:none;">
+            <div id="invoiceListArea">
+              <div class="empty-state">
+                <div class="icon">📋</div>
+                <h4>No invoices yet</h4>
+                <p style="font-size:13px;">Create an invoice to see it listed here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      Built with ❤️ for the <a href="#">PayPal + AI Hackathon</a> · Powered by PayPal Agent Toolkit · ReceiptGPT © 2024
+    </footer>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ===== State =====
+    let currentInvoice = null;
+    let invoiceCount = 0;
+    let invoiceList = [];
+
+    // ===== Helpers =====
+    async function api(method, path, body = null) {
+      const opts = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(path, opts);
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
+      return res.json();
+    }
+
+    function toast(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = msg;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    function addMessage(text, role = 'assistant', extra = '') {
+      const area = document.getElementById('chatArea');
+      const msg = document.createElement('div');
+      msg.className = `message ${role}`;
+      if (role === 'assistant') {
+        msg.innerHTML = `<div class="msg-label">ReceiptGPT</div>${text}${extra}`;
+      } else if (role === 'user') {
+        msg.innerHTML = `<div class="msg-label">You</div>${text}`;
+      } else {
+        msg.innerHTML = text;
+      }
+      area.appendChild(msg);
+      area.scrollTop = area.scrollHeight;
+    }
+
+    function showLoading() {
+      const area = document.getElementById('chatArea');
+      const el = document.createElement('div');
+      el.className = 'loading-indicator';
+      el.id = 'loadingIndicator';
+      el.innerHTML = '<div class="spinner"></div> Processing with PayPal AI...';
+      area.appendChild(el);
+      area.scrollTop = area.scrollHeight;
+    }
+
+    function hideLoading() {
+      const el = document.getElementById('loadingIndicator');
+      if (el) el.remove();
+    }
+
+    function renderInvoicePreview(invoice) {
+      const area = document.getElementById('invoicePreviewArea');
+      if (!invoice || !invoice.items || invoice.items.length === 0) {
+        area.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">📄</div>
+            <h4>No invoice to preview</h4>
+            <p style="font-size:13px;">Invoice data not available.</p>
+          </div>`;
+        document.getElementById('invoiceActions').style.display = 'none';
+        return;
+      }
+
+      const invId = invoice.invoiceId || invoice.id || 'DRAFT';
+      const total = invoice.items.reduce((s, i) => s + parseFloat(i.unit_amount?.value || 0) * (i.quantity || 1), 0);
+
+      let rows = invoice.items.map((item, i) => `
+        <tr>
+          <td>${item.name || item.description || 'Item ' + (i+1)}</td>
+          <td>${item.quantity || 1}</td>
+          <td>$${parseFloat(item.unit_amount?.value || 0).toFixed(2)}</td>
+          <td style="text-align:right;font-weight:600;">$${(parseFloat(item.unit_amount?.value || 0) * (item.quantity || 1)).toFixed(2)}</td>
+        </tr>
+      `).join('');
+
+      area.innerHTML = `
+        <div class="invoice-preview">
+          <div class="inv-header">
+            <div>
+              <div class="inv-company">ReceiptGPT</div>
+              <div style="color:#666;font-size:12px;">AI-Powered Invoicing</div>
+            </div>
+            <div class="inv-number">
+              <h4>${invId.substring(0, 20)}</h4>
+              <div style="color:#666;font-size:12px;">${new Date().toLocaleDateString()}</div>
+            </div>
+          </div>
+          <div style="margin-bottom:12px;font-size:12px;color:#555;">
+            <strong>Bill To:</strong> ${invoice.primary_recipients?.[0]?.billing_info?.email_address || invoice.customerEmail || 'client@example.com'}
+          </div>
+          <table>
+            <tr><th>Item</th><th>Qty</th><th>Rate</th><th style="text-align:right;">Amount</th></tr>
+            ${rows}
+            <tr class="total-row">
+              <td colspan="3" style="text-align:right;">Total</td>
+              <td style="text-align:right;">$${total.toFixed(2)}</td>
+            </tr>
+          </table>
+          <div style="margin-top:12px;padding-top:8px;border-top:1px solid #eee;font-size:11px;color:#999;text-align:center;">
+            Generated by ReceiptGPT AI · PayPal Invoice API
+          </div>
+        </div>`;
+      document.getElementById('invoiceActions').style.display = 'flex';
+    }
+
+    function renderInvoiceList(invoices) {
+      const area = document.getElementById('invoiceListArea');
+      if (!invoices || invoices.length === 0) {
+        area.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">📋</div>
+            <h4>No invoices found</h4>
+            <p style="font-size:13px;">Create an invoice first.</p>
+          </div>`;
+        return;
+      }
+
+      let items = invoices.slice(0, 20).map(inv => {
+        const id = inv.id || 'N/A';
+        const status = inv.status || 'DRAFT';
+        const amount = inv.amount?.value || '0.00';
+        const email = inv.primary_recipients?.[0]?.billing_info?.email_address || 'N/A';
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--border);font-size:13px;">
+            <div>
+              <div style="font-weight:500;">${id.substring(0,25)}</div>
+              <div style="color:var(--text-muted);font-size:12px;">${email}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:600;">$${amount}</div>
+              <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(0,200,83,0.1);color:var(--success);">${status}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      area.innerHTML = `<div style="max-height:350px;overflow-y:auto;">${items}</div>`;
+    }
+
+    // ===== Core Actions =====
+    async function sendInvoice() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      addMessage(text, 'user');
+      input.value = '';
+      document.getElementById('sendBtn').disabled = true;
+      showLoading();
+
+      try {
+        const result = await api('POST', '/api/ai/parse-invoice', { text });
+
+        if (result.success) {
+          currentInvoice = result.invoiceData || result.details || result;
+          currentInvoice.invoiceId = result.invoiceId;
+
+          addMessage(
+            result.message || '✅ Invoice created successfully!',
+            'system'
+          );
+
+          // Show preview
+          renderInvoicePreview(currentInvoice);
+
+          // Show details
+          addMessage(
+            `📋 **Invoice ${result.invoiceId}**
+` +
+            (result.invoiceData?.items || []).map(i => `  • ${i.name || 'Item'}: $${parseFloat(i.unit_amount?.value || 0).toFixed(2)}`).join('\n') +
+            `
+
+💡 Use the buttons below to send it or get a payment link.`,
+            'assistant',
+            ''
+          );
+
+          invoiceCount++;
+          document.getElementById('statsInvoices').textContent = invoiceCount;
+          toast('✅ Invoice created!', 'success');
+        } else {
+          // Fallback: try demo invoice creation as backup
+          toast('AI parsing had trouble, creating demo invoice instead...', 'info');
+          await createDemoInvoice();
+        }
+      } catch (err) {
+        addMessage(`⚠️ Error: ${err.message}. Try creating a demo invoice instead.`, 'assistant');
+        toast('Error: ' + err.message, 'error');
+      }
+
+      hideLoading();
+      document.getElementById('sendBtn').disabled = false;
+    }
+
+    function useSuggestion(text) {
+      document.getElementById('chatInput').value = text;
+      sendInvoice();
+    }
+
+    function loadSample() {
+      const samples = [
+        'Create an invoice for Sarah at sarah@example.com: UI/UX Design Consultation $350, Wireframes $450, Prototype $600',
+        'Bill TechStart Inc for: Cloud Infrastructure Setup $1,200, API Integration $800, Security Audit $600',
+        'Invoice for Freelance Project: Content Writing 10 articles at $50 each, Social Media Management $300',
+      ];
+      useSuggestion(samples[Math.floor(Math.random() * samples.length)]);
+    }
+
+    async function createDemoInvoice() {
+      showLoading();
+      try {
+        const result = await api('POST', '/api/demo/create-invoice', {
+          customerName: 'Alex',
+          customerEmail: 'alex@startup.io',
+        });
+
+        if (result.success) {
+          currentInvoice = result.invoice;
+          currentInvoice.invoiceId = result.invoice.id;
+
+          addMessage(`🎯 ${result.message}`, 'system');
+          renderInvoicePreview(currentInvoice);
+
+          // Build invoice data for preview
+          const previewData = result.invoice;
+          previewData.items = previewData.items || [
+            { name: 'AI Consulting Services', unit_amount: { value: '150.00' }, quantity: 1 },
+            { name: 'PayPal Integration Setup', unit_amount: { value: '75.00' }, quantity: 2 },
+            { name: 'Monthly Subscription', unit_amount: { value: '29.99' }, quantity: 1 },
+          ];
+
+          invoiceCount++;
+          document.getElementById('statsInvoices').textContent = invoiceCount;
+          const dCount = parseInt(document.getElementById('statsDEMO').textContent) + 1;
+          document.getElementById('statsDEMO').textContent = dCount;
+
+          addMessage(
+            `✅ Demo invoice created! ID: ${result.invoice.id}
+You can now send it or get a payment link.`,
+            'assistant'
+          );
+          toast('✅ Demo invoice created!', 'success');
+        }
+      } catch (err) {
+        addMessage(`⚠️ Demo error: ${err.message}`, 'assistant');
+        toast('Error: ' + err.message, 'error');
+      }
+      hideLoading();
+    }
+
+    async function sendCurrentInvoice() {
+      if (!currentInvoice?.invoiceId) {
+        toast('No invoice to send. Create one first!', 'error');
+        return;
+      }
+      try {
+        await api('POST', `/api/invoices/${currentInvoice.invoiceId}/send`);
+        toast('✅ Invoice sent!', 'success');
+        addMessage('📤 Invoice sent to recipient!', 'system');
+      } catch (err) {
+        toast('Send failed (sandbox limitation): ' + err.message, 'warning');
+        addMessage(`⚠️ Send: ${err.message}. In sandbox, invoices are viewable in the dashboard.`, 'assistant');
+      }
+    }
+
+    async function generatePaymentLink() {
+      if (!currentInvoice?.invoiceId) {
+        toast('No invoice selected.', 'error');
+        return;
+      }
+      try {
+        const result = await api('POST', `/api/invoices/${currentInvoice.invoiceId}/qr`);
+        const link = `https://www.sandbox.paypal.com/invoice/p/#${currentInvoice.invoiceId}`;
+        addMessage(`🔗 **Payment Link:** [${link}](${link})`, 'assistant');
+        toast('🔗 Payment link generated!', 'success');
+      } catch (err) {
+        toast('Link generation: ' + err.message, 'warning');
+        const fallback = `https://www.sandbox.paypal.com/invoice/p/#${currentInvoice.invoiceId}`;
+        addMessage(`🔗 Payment link: ${fallback}`, 'assistant');
+      }
+    }
+
+    async function generateAndCopyLink() {
+      if (!currentInvoice?.invoiceId) {
+        toast('Create an invoice first!', 'error');
+        return;
+      }
+      await generatePaymentLink();
+    }
+
+    async function fetchInvoices() {
+      showLoading();
+      try {
+        const result = await api('GET', '/api/invoices');
+        const items = result.items || result.invoices || [];
+        invoiceList = items;
+        renderInvoiceList(items);
+        addMessage(`📋 Found ${items.length} invoice(s)`, 'system');
+        if (items.length > 0) {
+          const total = items.reduce((s, i) => s + parseFloat(i.amount?.value || 0), 0);
+          addMessage(`📊 Total invoiced: $${total.toFixed(2)}`, 'assistant');
+        }
+        switchTab('all');
+      } catch (err) {
+        addMessage(`⚠️ Could not fetch invoices: ${err.message}`, 'assistant');
+      }
+      hideLoading();
+    }
+
+    async function fetchTransactions() {
+      showLoading();
+      try {
+        const result = await api('GET', '/api/transactions');
+        const txs = result.transaction_details || result.transactions || [];
+        addMessage(
+          txs.length > 0
+            ? `📊 Found ${txs.length} recent transaction(s)`
+            : '📊 No recent transactions (expected in sandbox)',
+          'system'
+        );
+      } catch (err) {
+        addMessage(`📊 Transaction history: ${err.message} (sandbox may have no data)`, 'assistant');
+      }
+      hideLoading();
+    }
+
+    // ===== Tabs =====
+    function switchTab(name) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      document.querySelector(`.tab[data-tab="${name}"]`).classList.add('active');
+      document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1)).style.display = 'block';
+    }
+
+    // ===== Init =====
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check API health
+      api('GET', '/api/health')
+        .then(data => console.log('ReceiptGPT API:', data))
+        .catch(err => console.warn('API not reachable, running static demo mode:', err.message));
+    });
+  </script>
+</body>
+</html>
